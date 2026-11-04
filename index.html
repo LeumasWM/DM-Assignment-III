@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AstraSync contract decision</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root{color-scheme:light dark;--color-fg:#1f2328;--color-fg-muted:#656d76;--color-bg:#ffffff;--color-panel:#f6f8fa;--color-border-line:#d0d7de;--color-ok:#1a7f37;
+--cds-radius:8px;--cds-pad-lg:1.25rem;--cds-pad-sm:.6rem;--cds-pad-xs:.3rem;--cds-gap-md:1rem;--cds-font-size-caption:.8rem;--cds-font-size-body:1rem;--cds-font-size-heading:1.25rem;--cds-font-size-title:1.75rem;--cds-font-weight-medium:600;
+--cds-chart-grid:#e5e7eb;--cds-chart-axis:#9ca3af;--cds-chart-reference:#6b7280;--cds-surface-popover:#fff;--cds-border:#d0d7de;--cds-shadow-popover:0 4px 12px rgba(0,0,0,.15);--cds-text-secondary:#656d76;
+--font-anthropic-sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--font-anthropic-serif:Georgia,"Times New Roman",serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--color-fg:#e6edf3;--color-fg-muted:#9198a1;--color-bg:#0d1117;--color-panel:#161b22;--color-border-line:#30363d;--color-ok:#3fb950;--cds-chart-grid:#21262d;--cds-chart-axis:#6e7681;--cds-chart-reference:#8b949e;--cds-surface-popover:#1c2128;--cds-border:#30363d;--cds-text-secondary:#9198a1}}
+:root[data-theme="dark"]{color-scheme:dark;--color-fg:#e6edf3;--color-fg-muted:#9198a1;--color-bg:#0d1117;--color-panel:#161b22;--color-border-line:#30363d;--color-ok:#3fb950;--cds-chart-grid:#21262d;--cds-chart-axis:#6e7681;--cds-chart-reference:#8b949e;--cds-surface-popover:#1c2128;--cds-border:#30363d;--cds-text-secondary:#9198a1}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;padding:clamp(1rem,4vw,2.5rem);background:var(--color-bg);color:var(--color-fg)}
+</style></head><body>
+<style>
+.as{max-width:64rem;margin-inline:auto;font-family:var(--font-anthropic-sans);font-size:var(--cds-font-size-body);color:var(--color-fg);line-height:1.55;font-variant-numeric:tabular-nums}
+.as h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0 0 .25rem}
+.as .sub{color:var(--color-fg-muted);margin:0 0 1.25rem}
+.as section{margin-block:2rem 0}
+.as h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:0 0 .75rem;padding-bottom:.4rem;border-bottom:1px solid var(--color-border-line)}
+.as h3{font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium);margin:0 0 .35rem}
+.as p{margin:0 0 .75rem}
+.as .card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-lg)}
+.as .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));gap:var(--cds-gap-md)}
+.as .note{color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.as .tag{display:inline-block;font-size:var(--cds-font-size-caption);color:var(--color-fg-muted);margin-bottom:.25rem}
+.as .big{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);display:block;line-height:1.2}
+.as .big b{font-weight:400}
+.as .ev{margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--color-border-line)}
+.as b{font-weight:600}
+.as .lead{background:var(--color-panel);border:1px solid var(--color-border-line);border-left:4px solid var(--color-ok);border-radius:var(--cds-radius);padding:var(--cds-pad-lg)}
+.as .chart{position:relative;min-height:300px;margin-top:.5rem}
+.as .tree{position:relative;min-height:350px;overflow-x:auto}
+.as .tablebox{overflow-x:auto}
+.as table{border-collapse:collapse;width:100%}
+.as th,.as td{text-align:right;padding:.4rem .6rem;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+.as th:first-child,.as td:first-child{text-align:left}
+.as th{font-weight:var(--cds-font-weight-medium);color:var(--color-fg-muted);font-size:var(--cds-font-size-caption)}
+.as .tip{position:absolute;pointer-events:none;background:var(--cds-surface-popover);border:1px solid var(--cds-border);border-radius:var(--cds-radius);box-shadow:var(--cds-shadow-popover);padding:var(--cds-pad-xs) var(--cds-pad-sm);font-size:var(--cds-font-size-caption);z-index:5;white-space:nowrap}
+.as .tip .t{color:var(--cds-text-secondary)}
+.as .sw{display:inline-block;width:.6rem;height:.6rem;border-radius:2px;margin-right:.35rem}
+.as ul{margin:0 0 .75rem;padding-left:1.25rem}
+.as li{margin-bottom:.35rem}
+[data-dash-source-state=empty]{color:transparent}
+</style>
+<div class="as">
+<h1>AstraSync contract decision</h1>
+<p class="sub">Which offer is worth the most for the 18-month AI/ML implementation, and how much does that depend on two uncertain estimates?</p>
+
+<section id="summary">
+<h2>Summary</h2>
+<div class="lead">
+<p>AstraSync must choose between the client’s fixed-fee offer (A), a lower monthly fee plus a bonus that may not be paid (B), and rejecting both to bid in the client’s RFP (C). I valued each option as the present value of its monthly margin after delivery cost, weighted by the chance the bonus is earned or the bid is won, and I simulated the gain-share from the client’s savings with <b data-draw="num" data-source="inputs" data-field="value" data-where="key=sims" data-fmt="int">—</b> draws. Expected present values are <b data-draw="num" data-source="options" data-field="expected_value" data-where="option=A">—</b> for A, <b data-draw="num" data-source="options" data-field="expected_value" data-where="option=B">—</b> for B, and <b data-draw="num" data-source="options" data-field="expected_value" data-where="option=C">—</b> for C, so C leads by only <b data-draw="num" data-source="options" data-field="vs_a_pct" data-where="option=C" data-fmt="pct1">—</b> over A. B and C beat A only if the bonus chance is above <b data-draw="num" data-source="breakeven" data-field="breakeven" data-where="input=Chance the bonus is earned" data-fmt="pct1">—</b> and the win chance is above <b data-draw="num" data-source="breakeven" data-field="breakeven" data-where="input=Chance of winning the RFP" data-fmt="pct1">—</b>, and C pays nothing if the bid is lost, so I recommend accepting Option A.</p>
+</div>
+</section>
+
+<section id="analysis">
+<h2>Analysis</h2>
+<p>Each month’s margin is the payment minus delivery cost of <b data-draw="num" data-source="inputs" data-field="value" data-where="key=monthly_cost">—</b> (<b data-draw="num" data-source="inputs" data-field="value" data-where="key=hours_per_month" data-fmt="int">—</b> hours at <b data-draw="num" data-source="inputs" data-field="value" data-where="key=cost_per_hour">—</b> an hour). Margins are discounted at <b data-draw="num" data-source="inputs" data-field="value" data-where="key=discount_rate" data-fmt="pct1">—</b> a month, which gives an annuity factor of <b data-draw="num" data-source="inputs" data-field="value" data-where="key=annuity_factor" data-fmt="dec">—</b> for <b data-draw="num" data-source="inputs" data-field="value" data-where="key=months" data-fmt="int">—</b> months. For reference, AstraSync’s original price of <b data-draw="num" data-source="inputs" data-field="value" data-where="key=list_price">—</b> a month was worth <b data-draw="num" data-source="inputs" data-field="value" data-where="key=list_pv">—</b> today, and the client rejected it.</p>
+<div class="grid">
+<div class="card">
+<span class="tag">Option A</span>
+<h3>Fixed monthly payments</h3>
+<p>The client pays <b data-draw="num" data-source="inputs" data-field="value" data-where="key=a_payment">—</b> every month for the full term. Nothing depends on performance, so the margin is certain and its value is the discounted sum of those margins. There is no upside beyond that and no risk beyond the client failing to pay.</p>
+<p class="ev">Expected value <span class="big"><b data-draw="num" data-source="options" data-field="expected_value" data-where="option=A">—</b></span></p>
+</div>
+<div class="card">
+<span class="tag">Option B</span>
+<h3>Lower payments plus a bonus</h3>
+<p>The client pays <b data-draw="num" data-source="inputs" data-field="value" data-where="key=b_payment">—</b> a month plus a <b data-draw="num" data-source="inputs" data-field="value" data-where="key=b_bonus">—</b> bonus at the end of the term, only if the implementation succeeds and clearly beats the client’s benchmark. The payments alone are worth <b data-draw="num" data-source="options" data-field="pv_payments" data-where="option=B">—</b> today. The bonus is worth <b data-draw="num" data-source="inputs" data-field="value" data-where="key=bonus_pv">—</b> today if earned, and AstraSync puts its chance at <b data-draw="num" data-source="inputs" data-field="value" data-where="key=b_prob" data-fmt="pct">—</b>.</p>
+<p class="ev">Expected value <span class="big"><b data-draw="num" data-source="options" data-field="expected_value" data-where="option=B">—</b></span></p>
+</div>
+<div class="card">
+<span class="tag">Option C</span>
+<h3>Reject both and bid in the RFP</h3>
+<p>The client opens the project to competing bids. AstraSync would bid <b data-draw="num" data-source="inputs" data-field="value" data-where="key=c_bid">—</b> a month and estimates a <b data-draw="num" data-source="inputs" data-field="value" data-where="key=c_win" data-fmt="pct">—</b> chance of winning. The winner also earns a tiered share of the client’s savings, which are uncertain. If the bid wins, the margin is worth <b data-draw="num" data-source="options" data-field="pv_payments" data-where="option=C">—</b> and the expected gain-share adds <b data-draw="num" data-source="options" data-field="pv_contingent" data-where="option=C">—</b> in today’s money. If it loses, AstraSync earns nothing.</p>
+<p class="ev">Expected value <span class="big"><b data-draw="num" data-source="options" data-field="expected_value" data-where="option=C">—</b></span></p>
+</div>
+</div>
+
+<div class="card" style="margin-top:var(--cds-gap-md)">
+<h3>How the options compare</h3>
+<p class="note">Present values at today’s date. Worst and best case are the lowest and highest outcomes for that option.</p>
+<div class="tablebox">
+<table data-source="options" data-row-key="option">
+<thead><tr><th data-field="option" data-fmt="opt">Option</th><th data-field="pv_payments" data-fmt="usd">Margin on payments</th><th data-field="pv_contingent" data-fmt="usd">Contingent value</th><th data-field="chance" data-fmt="pct">Chance of payoff</th><th data-field="expected_value" data-fmt="usd">Expected value</th><th data-field="worst_case" data-fmt="usd">Worst case</th><th data-field="best_case" data-fmt="usd">Best case</th></tr></thead>
+<tbody data-draw="rows"></tbody>
+</table>
+</div>
+</div>
+
+<div class="card" style="margin-top:var(--cds-gap-md)">
+<h3>Simulated gain-share under Option C</h3>
+<p>The client’s savings follow a triangular distribution with a low of <b data-draw="num" data-source="inputs" data-field="value" data-where="key=sav_low" data-fmt="usdm">—</b>, a most likely value of <b data-draw="num" data-source="inputs" data-field="value" data-where="key=sav_mode" data-fmt="usdm">—</b>, and a high of <b data-draw="num" data-source="inputs" data-field="value" data-where="key=sav_high" data-fmt="usdm">—</b>. The mean share is <b data-draw="num" data-source="inputs" data-field="value" data-where="key=mean_share">—</b> but the median is only <b data-draw="num" data-source="inputs" data-field="value" data-where="key=median_share">—</b>, because a long tail of high-savings outcomes pulls the mean up.</p>
+<div class="chart" data-draw="hist" data-source="share_hist inputs">—</div>
+<p class="note">Histogram counts come from a Python re-run of the same distribution and tier rules with the same seed. The mean and median lines are the values from the R simulation.</p>
+</div>
+</section>
+
+<section id="illustration">
+<h2>Illustration</h2>
+<p>The decision tree shows each choice, the chance events that follow, and the present value at the end of each branch. Squares are decisions and circles are chance events. A chance node’s value is the probability-weighted average of its branches.</p>
+<div class="card">
+<div class="tree" data-draw="tree" data-source="tree">—</div>
+</div>
+</section>
+
+<section id="sensitivity">
+<h2>Sensitivity analysis</h2>
+<p>I varied the two inputs that rest on judgment rather than contract terms: the chance the bonus is earned (drives Option B) and the chance of winning the RFP (drives Option C). The dashed line marks the break-even point against Option A, and the solid line marks AstraSync’s current estimate.</p>
+<div class="grid">
+<div class="card">
+<h3>Chance the bonus is earned</h3>
+<p class="note">Option B only beats Option A above <b data-draw="num" data-source="breakeven" data-field="breakeven" data-where="input=Chance the bonus is earned" data-fmt="pct1">—</b>, and the current estimate is <b data-draw="num" data-source="breakeven" data-field="estimate" data-where="input=Chance the bonus is earned" data-fmt="pct1">—</b>.</p>
+<div class="chart" data-draw="chart-bonus" data-source="sens_bonus breakeven">—</div>
+</div>
+<div class="card">
+<h3>Chance of winning the RFP</h3>
+<p class="note">Option C only beats Option A above <b data-draw="num" data-source="breakeven" data-field="breakeven" data-where="input=Chance of winning the RFP" data-fmt="pct1">—</b>, and the current estimate is <b data-draw="num" data-source="breakeven" data-field="estimate" data-where="input=Chance of winning the RFP" data-fmt="pct1">—</b>.</p>
+<div class="chart" data-draw="chart-win" data-source="sens_win breakeven">—</div>
+</div>
+</div>
+<div class="card" style="margin-top:var(--cds-gap-md)">
+<h3>Break-even points</h3>
+<div class="tablebox">
+<table data-source="breakeven" data-row-key="input">
+<thead><tr><th data-field="input" data-fmt="raw">Input</th><th data-field="estimate" data-fmt="pct">Current estimate</th><th data-field="breakeven" data-fmt="pct1">Break-even versus A</th><th data-field="compare" data-fmt="raw">Reading</th></tr></thead>
+<tbody data-draw="rows"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section id="conclusion">
+<h2>Conclusion</h2>
+<p>By expected value alone, Option C ranks first, Option B second, and Option A third. The gap is small: C is ahead of A by <b data-draw="num" data-source="options" data-field="vs_a" data-where="option=C">—</b> and B by <b data-draw="num" data-source="options" data-field="vs_a" data-where="option=B">—</b>. Both advantages disappear if the bonus chance falls below <b data-draw="num" data-source="breakeven" data-field="breakeven" data-where="input=Chance the bonus is earned" data-fmt="pct1">—</b> or the win chance falls below <b data-draw="num" data-source="breakeven" data-field="breakeven" data-where="input=Chance of winning the RFP" data-fmt="pct1">—</b>, and both estimates sit just above those lines.</p>
+<p><b>Recommendation: accept Option A.</b> It locks in <b data-draw="num" data-source="options" data-field="expected_value" data-where="option=A">—</b> with no dependence on the benchmark, the competition, or the client’s savings. Option C gives up a certain payoff for a bid that returns nothing if lost, and its worst case is <b data-draw="num" data-source="options" data-field="worst_case" data-where="option=C">—</b>.</p>
+<ul>
+<li>Choose Option C instead if you have evidence the win chance is clearly above its break-even and you can absorb a lost bid.</li>
+<li>Choose Option B instead if you can get the benchmark’s definition in writing and that supports a bonus chance well above its break-even.</li>
+<li>The analysis ignores the cost of preparing a bid and assumes the team’s hours have no other use if the bid is lost, which would both favor Option A further.</li>
+</ul>
+</section>
+</div>
+<script>
+window.dash=(function(){
+  const DATA={"inputs": [{"key": "discount_rate", "value": 0.015}, {"key": "months", "value": 18.0}, {"key": "hours_per_month", "value": 1200.0}, {"key": "cost_per_hour", "value": 100.0}, {"key": "monthly_cost", "value": 120000.0}, {"key": "annuity_factor", "value": 15.6726}, {"key": "list_price", "value": 160000.0}, {"key": "list_pv", "value": 626902.4357}, {"key": "a_payment", "value": 152000.0}, {"key": "b_payment", "value": 125000.0}, {"key": "b_bonus", "value": 800000.0}, {"key": "b_prob", "value": 0.7}, {"key": "bonus_pv", "value": 611929.2693}, {"key": "c_bid", "value": 150000.0}, {"key": "c_win", "value": 0.4}, {"key": "sav_low", "value": 3200000.0}, {"key": "sav_mode", "value": 5600000.0}, {"key": "sav_high", "value": 12800000.0}, {"key": "sims", "value": 10000.0}, {"key": "mean_savings", "value": 7209867.0}, {"key": "mean_share", "value": 1058820.0}, {"key": "median_share", "value": 774300.2}, {"key": "pv_share", "value": 809903.6861}, {"key": "pv_monthly_c", "value": 470176.8268}, {"key": "win_payoff_c", "value": 1280080.5129}], "options": [{"option": "A", "pv_payments": 501521.9486, "pv_contingent": 0.0, "chance": 1.0, "expected_value": 501521.9486, "worst_case": 501521.9486, "best_case": 501521.9486, "vs_a": 0.0, "vs_a_pct": 0.0}, {"option": "B", "pv_payments": 78362.8045, "pv_contingent": 611929.2693, "chance": 0.7, "expected_value": 506713.293, "worst_case": 78362.8045, "best_case": 690292.0738, "vs_a": 5191.3444, "vs_a_pct": 0.0104}, {"option": "C", "pv_payments": 470176.8268, "pv_contingent": 809903.6861, "chance": 0.4, "expected_value": 512032.2052, "worst_case": 0.0, "best_case": 1280080.5129, "vs_a": 10510.2566, "vs_a_pct": 0.021}], "tree": [{"id": "root", "parent": "", "kind": "decision", "label": "Choose a contract", "prob": "", "value": 512032.2052}, {"id": "A", "parent": "root", "kind": "end", "label": "Option A: fixed payments", "prob": "", "value": 501521.9486}, {"id": "B", "parent": "root", "kind": "chance", "label": "Option B: payments plus bonus", "prob": "", "value": 506713.293}, {"id": "Bw", "parent": "B", "kind": "end", "label": "Bonus earned", "prob": 0.7, "value": 690292.0738}, {"id": "Bn", "parent": "B", "kind": "end", "label": "No bonus", "prob": 0.3, "value": 78362.8045}, {"id": "C", "parent": "root", "kind": "chance", "label": "Option C: reject both, bid in RFP", "prob": "", "value": 512032.2052}, {"id": "Cw", "parent": "C", "kind": "end", "label": "Win the bid", "prob": 0.4, "value": 1280080.5129}, {"id": "Cl", "parent": "C", "kind": "end", "label": "Lose the bid", "prob": 0.6, "value": 0.0}], "share_hist": [{"bin_start": 0, "bin_end": 200000, "count": 1419}, {"bin_start": 200000, "bin_end": 400000, "count": 1918}, {"bin_start": 400000, "bin_end": 600000, "count": 960}, {"bin_start": 600000, "bin_end": 800000, "count": 892}, {"bin_start": 800000, "bin_end": 1000000, "count": 763}, {"bin_start": 1000000, "bin_end": 1200000, "count": 747}, {"bin_start": 1200000, "bin_end": 1400000, "count": 439}, {"bin_start": 1400000, "bin_end": 1600000, "count": 412}, {"bin_start": 1600000, "bin_end": 1800000, "count": 364}, {"bin_start": 1800000, "bin_end": 2000000, "count": 330}, {"bin_start": 2000000, "bin_end": 2200000, "count": 305}, {"bin_start": 2200000, "bin_end": 2400000, "count": 257}, {"bin_start": 2400000, "bin_end": 2600000, "count": 281}, {"bin_start": 2600000, "bin_end": 2800000, "count": 234}, {"bin_start": 2800000, "bin_end": 3000000, "count": 182}, {"bin_start": 3000000, "bin_end": 3200000, "count": 161}, {"bin_start": 3200000, "bin_end": 3400000, "count": 145}, {"bin_start": 3400000, "bin_end": 3600000, "count": 94}, {"bin_start": 3600000, "bin_end": 3800000, "count": 69}, {"bin_start": 3800000, "bin_end": 4000000, "count": 27}, {"bin_start": 4000000, "bin_end": 4200000, "count": 1}], "sens_bonus": [{"p": 0.0, "A": 501521.9486, "B": 78362.8045, "C": 512032.2052}, {"p": 0.05, "A": 501521.9486, "B": 108959.2679, "C": 512032.2052}, {"p": 0.1, "A": 501521.9486, "B": 139555.7314, "C": 512032.2052}, {"p": 0.15, "A": 501521.9486, "B": 170152.1949, "C": 512032.2052}, {"p": 0.2, "A": 501521.9486, "B": 200748.6583, "C": 512032.2052}, {"p": 0.25, "A": 501521.9486, "B": 231345.1218, "C": 512032.2052}, {"p": 0.3, "A": 501521.9486, "B": 261941.5852, "C": 512032.2052}, {"p": 0.35, "A": 501521.9486, "B": 292538.0487, "C": 512032.2052}, {"p": 0.4, "A": 501521.9486, "B": 323134.5122, "C": 512032.2052}, {"p": 0.45, "A": 501521.9486, "B": 353730.9756, "C": 512032.2052}, {"p": 0.5, "A": 501521.9486, "B": 384327.4391, "C": 512032.2052}, {"p": 0.55, "A": 501521.9486, "B": 414923.9026, "C": 512032.2052}, {"p": 0.6, "A": 501521.9486, "B": 445520.366, "C": 512032.2052}, {"p": 0.65, "A": 501521.9486, "B": 476116.8295, "C": 512032.2052}, {"p": 0.7, "A": 501521.9486, "B": 506713.293, "C": 512032.2052}, {"p": 0.75, "A": 501521.9486, "B": 537309.7564, "C": 512032.2052}, {"p": 0.8, "A": 501521.9486, "B": 567906.2199, "C": 512032.2052}, {"p": 0.85, "A": 501521.9486, "B": 598502.6834, "C": 512032.2052}, {"p": 0.9, "A": 501521.9486, "B": 629099.1468, "C": 512032.2052}, {"p": 0.95, "A": 501521.9486, "B": 659695.6103, "C": 512032.2052}, {"p": 1.0, "A": 501521.9486, "B": 690292.0738, "C": 512032.2052}], "sens_win": [{"w": 0.0, "A": 501521.9486, "B": 506713.293, "C": 0.0}, {"w": 0.05, "A": 501521.9486, "B": 506713.293, "C": 64004.0256}, {"w": 0.1, "A": 501521.9486, "B": 506713.293, "C": 128008.0513}, {"w": 0.15, "A": 501521.9486, "B": 506713.293, "C": 192012.0769}, {"w": 0.2, "A": 501521.9486, "B": 506713.293, "C": 256016.1026}, {"w": 0.25, "A": 501521.9486, "B": 506713.293, "C": 320020.1282}, {"w": 0.3, "A": 501521.9486, "B": 506713.293, "C": 384024.1539}, {"w": 0.35, "A": 501521.9486, "B": 506713.293, "C": 448028.1795}, {"w": 0.4, "A": 501521.9486, "B": 506713.293, "C": 512032.2052}, {"w": 0.45, "A": 501521.9486, "B": 506713.293, "C": 576036.2308}, {"w": 0.5, "A": 501521.9486, "B": 506713.293, "C": 640040.2565}, {"w": 0.55, "A": 501521.9486, "B": 506713.293, "C": 704044.2821}, {"w": 0.6, "A": 501521.9486, "B": 506713.293, "C": 768048.3077}, {"w": 0.65, "A": 501521.9486, "B": 506713.293, "C": 832052.3334}, {"w": 0.7, "A": 501521.9486, "B": 506713.293, "C": 896056.359}, {"w": 0.75, "A": 501521.9486, "B": 506713.293, "C": 960060.3847}, {"w": 0.8, "A": 501521.9486, "B": 506713.293, "C": 1024064.4103}, {"w": 0.85, "A": 501521.9486, "B": 506713.293, "C": 1088068.436}, {"w": 0.9, "A": 501521.9486, "B": 506713.293, "C": 1152072.4616}, {"w": 0.95, "A": 501521.9486, "B": 506713.293, "C": 1216076.4873}, {"w": 1.0, "A": 501521.9486, "B": 506713.293, "C": 1280080.5129}], "breakeven": [{"id": "bonus", "input": "Chance the bonus is earned", "estimate": 0.7, "breakeven": 0.6915, "compare": "B beats A above this"}, {"id": "win", "input": "Chance of winning the RFP", "estimate": 0.4, "breakeven": 0.3918, "compare": "C beats A above this"}]};
+  const draws=[];
+  const css=getComputedStyle(document.documentElement);
+  const colors=['#2563eb','#ea580c','#059669','#9333ea','#dc2626','#0891b2','#ca8a04','#64748b'];
+  const api={colors,
+    data:id=>({status:DATA[id]?'ok':'missing',data:DATA[id]||[]}),
+    draw(name,fn){draws.push([name,fn]);}};
+  function run(){draws.forEach(([n,fn])=>document.querySelectorAll('[data-draw="'+n+'"]').forEach(el=>fn(el)));}
+  window.addEventListener('DOMContentLoaded',()=>setTimeout(run,0));
+  let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(run,120);});
+  return api;
+})();
+</script>
+<script>
+(() => {
+  const F = {
+    usd: v => '$' + d3.format(',.0f')(v),
+    usdk: v => '$' + d3.format(',.0f')(v / 1000) + 'k',
+    usdm: v => '$' + d3.format('.1f')(v / 1e6) + 'M',
+    pct: v => d3.format('.0%')(v),
+    pct1: v => d3.format('.1%')(v),
+    int: v => d3.format(',')(v),
+    dec: v => d3.format(',.2f')(v),
+    opt: v => 'Option ' + v,
+    raw: v => String(v)
+  };
+  const ok = id => { const d = dash.data(id); return d.status === 'ok' ? d.data : null; };
+  const fail = el => { el.replaceChildren(); el.textContent = '—'; };
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n);
+
+  dash.draw('num', el => {
+    const rows = ok(el.dataset.source);
+    if (!rows) { el.textContent = '—'; return; }
+    let row = rows[Number(el.dataset.row || 0)];
+    if (el.dataset.where) {
+      const i = el.dataset.where.indexOf('=');
+      const k = el.dataset.where.slice(0, i), v = el.dataset.where.slice(i + 1);
+      row = rows.find(r => String(r[k]) === v);
+    }
+    if (!row) { el.textContent = '—'; return; }
+    el.textContent = F[el.dataset.fmt || 'usd'](Number(row[el.dataset.field]));
+  });
+
+  dash.draw('rows', tbody => {
+    const table = tbody.closest('table');
+    const rows = ok(table.dataset.source);
+    if (!rows) { tbody.replaceChildren(); return; }
+    const ths = [...table.querySelectorAll('th[data-field]')];
+    const key = table.dataset.rowKey;
+    tbody.replaceChildren(...rows.map(r => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = String(r[key]);
+      ths.forEach(th => {
+        const td = document.createElement('td');
+        const v = r[th.dataset.field];
+        const f = F[th.dataset.fmt || 'raw'];
+        td.textContent = (typeof v === 'number' || th.dataset.fmt === 'opt') ? f(v) : String(v);
+        tr.appendChild(td);
+      });
+      return tr;
+    }));
+  });
+
+  const tip = (host) => {
+    host.style.position = 'relative';
+    const t = document.createElement('div');
+    t.className = 'tip';
+    t.style.display = 'none';
+    return {
+      el: t,
+      show(evt, build) {
+        t.replaceChildren(); build(t);
+        t.style.display = 'block';
+        const hr = host.getBoundingClientRect();
+        let left = evt.clientX - hr.left + 12;
+        if (left + t.offsetWidth > hr.width) left = evt.clientX - hr.left - t.offsetWidth - 12;
+        t.style.left = Math.max(0, left) + 'px';
+        t.style.top = Math.max(0, Math.min(evt.clientY - hr.top - 10, hr.height - t.offsetHeight)) + 'px';
+      },
+      hide() { t.style.display = 'none'; }
+    };
+  };
+  const line = (parent, txt, cls) => { const d = document.createElement('div'); if (cls) d.className = cls; d.textContent = txt; parent.appendChild(d); return d; };
+  const clean = g => g.attr('font-size', null).attr('font-family', null);
+
+  function lineChart(el, o) {
+    const rows = ok(o.data), be = ok('breakeven');
+    if (!rows || !be) { fail(el); return; }
+    const beRow = be.find(r => r.id === o.be);
+    const W = Math.max(el.clientWidth, 300), H = 300;
+    const m = { t: 24, r: Math.min(92, W * 0.24), b: 38, l: 54 };
+    const xs = d3.scaleLinear([0, 1], [m.l, W - m.r]);
+    const ymax = d3.max(rows, d => Math.max(...o.series.map(s => Number(d[s.key]))));
+    const ys = d3.scaleLinear([0, ymax * 1.08], [H - m.b, m.t]);
+    const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    clean(svg.append('g').attr('transform', `translate(${m.l},0)`)
+      .call(d3.axisLeft(ys).ticks(5).tickFormat(F.usdk).tickSize(-(W - m.l - m.r)))
+      .call(g => g.select('.domain').remove())
+      .call(g => g.selectAll('.tick line').attr('stroke', 'var(--cds-chart-grid)'))
+      .call(g => g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)')));
+    clean(svg.append('g').attr('transform', `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(xs).ticks(5).tickFormat(d3.format('.0%')))
+      .call(g => g.select('.domain').attr('stroke', 'var(--cds-chart-axis)'))
+      .call(g => g.selectAll('.tick line').attr('stroke', 'var(--cds-chart-axis)'))
+      .call(g => g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)')));
+    svg.append('text').attr('x', (m.l + W - m.r) / 2).attr('y', H - 4).attr('text-anchor', 'middle')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text(o.xlabel);
+    if (beRow) {
+      const ln = (v, dash_) => svg.append('line').attr('x1', xs(v)).attr('x2', xs(v)).attr('y1', m.t).attr('y2', H - m.b)
+        .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-width', 1).attr('stroke-dasharray', dash_ || null);
+      ln(Number(beRow.estimate));
+      ln(Number(beRow.breakeven), '4 3');
+      svg.append('text').attr('x', xs(Number(beRow.estimate)) + 4).attr('y', m.t - 8).attr('fill', 'var(--color-fg-muted)')
+        .style('font-size', 'var(--cds-font-size-caption)').text('Estimate');
+      svg.append('text').attr('x', xs(Number(beRow.breakeven)) - 4).attr('y', m.t - 8).attr('text-anchor', 'end')
+        .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text('Break-even');
+    }
+    o.series.forEach((s, i) => {
+      svg.append('path').datum(rows).attr('fill', 'none').attr('stroke', dash.colors[i]).attr('stroke-width', 2)
+        .attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+        .attr('d', d3.line().x(d => xs(Number(d[o.x]))).y(d => ys(Number(d[s.key]))));
+    });
+    const last = rows[rows.length - 1];
+    const lab = o.series.map((s, i) => ({ s, i, y: ys(Number(last[s.key])) })).sort((a, b) => a.y - b.y);
+    for (let k = 1; k < lab.length; k++) if (lab[k].y - lab[k - 1].y < 14) lab[k].y = lab[k - 1].y + 14;
+    lab.forEach(l => svg.append('text').attr('x', W - m.r + 8).attr('y', l.y + 4).attr('fill', dash.colors[l.i])
+      .style('font-size', 'var(--cds-font-size-caption)').text(l.s.name));
+    const rule = svg.append('line').attr('y1', m.t).attr('y2', H - m.b).attr('stroke', 'var(--cds-chart-axis)').style('display', 'none');
+    const dots = o.series.map((s, i) => svg.append('circle').attr('r', 4).attr('fill', dash.colors[i]).style('display', 'none'));
+    const T = tip(el);
+    svg.append('rect').attr('x', m.l).attr('y', m.t).attr('width', W - m.l - m.r).attr('height', H - m.t - m.b)
+      .attr('fill', 'transparent')
+      .on('pointermove', function (evt) {
+        const r = svg.node().getBoundingClientRect();
+        const px = (evt.clientX - r.left) * (W / r.width);
+        const x0 = xs.invert(px);
+        const d = rows.reduce((a, b) => Math.abs(Number(b[o.x]) - x0) < Math.abs(Number(a[o.x]) - x0) ? b : a);
+        rule.attr('x1', xs(Number(d[o.x]))).attr('x2', xs(Number(d[o.x]))).style('display', null);
+        o.series.forEach((s, i) => dots[i].attr('cx', xs(Number(d[o.x]))).attr('cy', ys(Number(d[s.key]))).style('display', null));
+        T.show(evt, t => {
+          line(t, o.xlabel + ': ' + F.pct(Number(d[o.x])), 't');
+          o.series.forEach((s, i) => {
+            const row = line(t, '');
+            const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = dash.colors[i];
+            row.appendChild(sw); row.appendChild(document.createTextNode(s.name + ': ' + F.usd(Number(d[s.key]))));
+          });
+        });
+      })
+      .on('pointerleave', () => { rule.style('display', 'none'); dots.forEach(c => c.style('display', 'none')); T.hide(); });
+    el.replaceChildren(svg.node(), T.el);
+  }
+
+  const series = [{ key: 'A', name: 'Option A' }, { key: 'B', name: 'Option B' }, { key: 'C', name: 'Option C' }];
+  dash.draw('chart-bonus', el => lineChart(el, { data: 'sens_bonus', x: 'p', series, be: 'bonus', xlabel: 'Chance the bonus is earned' }));
+  dash.draw('chart-win', el => lineChart(el, { data: 'sens_win', x: 'w', series, be: 'win', xlabel: 'Chance of winning the RFP' }));
+
+  dash.draw('hist', el => {
+    const rows = ok('share_hist'), inp = ok('inputs');
+    if (!rows || !inp) { fail(el); return; }
+    const val = k => Number(inp.find(r => r.key === k).value);
+    const sims = val('sims'), mean = val('mean_share'), med = val('median_share');
+    const W = Math.max(el.clientWidth, 300), H = 300;
+    const m = { t: 24, r: 16, b: 40, l: 48 };
+    const xmax = Number(rows[rows.length - 1].bin_end);
+    const xs = d3.scaleLinear([0, xmax], [m.l, W - m.r]);
+    const ys = d3.scaleLinear([0, d3.max(rows, d => Number(d.count)) * 1.08], [H - m.b, m.t]);
+    const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+    clean(svg.append('g').attr('transform', `translate(${m.l},0)`)
+      .call(d3.axisLeft(ys).ticks(5).tickFormat(d3.format(',')).tickSize(-(W - m.l - m.r)))
+      .call(g => g.select('.domain').remove())
+      .call(g => g.selectAll('.tick line').attr('stroke', 'var(--cds-chart-grid)'))
+      .call(g => g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)')));
+    clean(svg.append('g').attr('transform', `translate(0,${H - m.b})`)
+      .call(d3.axisBottom(xs).ticks(6).tickFormat(F.usdm))
+      .call(g => g.select('.domain').attr('stroke', 'var(--cds-chart-axis)'))
+      .call(g => g.selectAll('.tick line').attr('stroke', 'var(--cds-chart-axis)'))
+      .call(g => g.selectAll('text').attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)')));
+    svg.append('text').attr('x', (m.l + W - m.r) / 2).attr('y', H - 4).attr('text-anchor', 'middle')
+      .attr('fill', 'var(--color-fg-muted)').style('font-size', 'var(--cds-font-size-caption)').text('Share of savings');
+    const T = tip(el);
+    svg.selectAll('rect.bar').data(rows).join('rect').attr('class', 'bar')
+      .attr('x', d => xs(Number(d.bin_start)) + 1).attr('width', d => Math.max(1, xs(Number(d.bin_end)) - xs(Number(d.bin_start)) - 2))
+      .attr('y', d => ys(Number(d.count))).attr('height', d => H - m.b - ys(Number(d.count)))
+      .attr('rx', 2).attr('fill', dash.colors[0])
+      .on('pointermove', (evt, d) => T.show(evt, t => {
+        line(t, F.usdm(Number(d.bin_start)) + ' to ' + F.usdm(Number(d.bin_end)), 't');
+        line(t, F.int(Number(d.count)) + ' of ' + F.int(sims) + ' simulations');
+      }))
+      .on('pointerleave', () => T.hide());
+    const ref = (v, name, anchor, dx, dashed) => {
+      svg.append('line').attr('x1', xs(v)).attr('x2', xs(v)).attr('y1', m.t).attr('y2', H - m.b)
+        .attr('stroke', 'var(--color-fg)').attr('stroke-width', 1.5).attr('stroke-dasharray', dashed ? '4 3' : null).style('pointer-events', 'none');
+      svg.append('text').attr('x', xs(v) + dx).attr('y', m.t - 8).attr('text-anchor', anchor).attr('fill', 'var(--color-fg)')
+        .style('font-size', 'var(--cds-font-size-caption)').text(name + ' ' + F.usd(v));
+    };
+    ref(med, 'Median', 'end', -4, true);
+    ref(mean, 'Mean', 'start', 4, false);
+    el.replaceChildren(svg.node(), T.el);
+  });
+
+  dash.draw('tree', el => {
+    const rows = ok('tree');
+    if (!rows) { fail(el); return; }
+    const kids = id => rows.filter(r => r.parent === id);
+    const leaves = [];
+    (function walk(id) { const k = kids(id); if (!k.length) { leaves.push(id); return; } k.forEach(c => walk(c.id)); })('root');
+    const X = { root: 60, mid: 290, leaf: 520 }, W = 760, H = 350;
+    const pos = {};
+    leaves.forEach((id, i) => { pos[id] = { x: X.leaf, y: 40 + i * 68 }; });
+    const place = id => {
+      if (pos[id]) return pos[id].y;
+      const ys = kids(id).map(c => place(c.id));
+      pos[id] = { x: id === 'root' ? X.root : X.mid, y: d3.mean(ys) };
+      return pos[id].y;
+    };
+    place('root');
+    const svg = d3.create('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).style('min-width', '560px');
+    const txt = (x, y, s, o = {}) => svg.append('text').attr('x', x).attr('y', y).attr('text-anchor', o.anchor || 'start')
+      .attr('fill', o.fill || 'var(--color-fg)').attr('stroke', o.halo ? 'var(--color-panel)' : null).attr('stroke-width', o.halo ? 4 : null)
+      .attr('paint-order', o.halo ? 'stroke' : null).style('font-size', 'var(--cds-font-size-caption)')
+      .style('font-weight', o.bold ? 600 : 400).text(s);
+    rows.filter(r => r.parent).forEach(r => {
+      const a = pos[r.parent], b = pos[r.id];
+      svg.append('line').attr('x1', a.x).attr('y1', a.y).attr('x2', b.x).attr('y2', b.y)
+        .attr('stroke', 'var(--cds-chart-axis)').attr('stroke-width', 1.5);
+    });
+    rows.filter(r => r.parent).forEach(r => {
+      const a = pos[r.parent], b = pos[r.id];
+      const label = r.prob === '' || r.prob == null ? r.label : r.label + ' · ' + F.pct(Number(r.prob));
+      txt((a.x + b.x) / 2, (a.y + b.y) / 2 - 7, label, { anchor: 'middle', halo: true });
+    });
+    rows.forEach(r => {
+      const p = pos[r.id];
+      if (r.kind === 'decision') svg.append('rect').attr('x', p.x - 9).attr('y', p.y - 9).attr('width', 18).attr('height', 18)
+        .attr('fill', 'var(--color-fg)');
+      else if (r.kind === 'chance') {
+        svg.append('circle').attr('cx', p.x).attr('cy', p.y).attr('r', 9).attr('fill', 'var(--color-panel)')
+          .attr('stroke', 'var(--color-fg)').attr('stroke-width', 2);
+        txt(p.x, p.y + 26, 'EV ' + F.usd(Number(r.value)), { anchor: 'middle', bold: true });
+      } else {
+        svg.append('circle').attr('cx', p.x).attr('cy', p.y).attr('r', 5).attr('fill', 'var(--color-fg)');
+        txt(p.x + 12, p.y + 4, F.usd(Number(r.value)), { bold: true });
+      }
+    });
+    el.replaceChildren(svg.node());
+  });
+})();
+</script>
+
+</body></html>
